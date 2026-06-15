@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AKA UKA EXPRESS</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #080c14; color: white; max-width: 480px; margin: 0 auto; }
+
+.header { position: relative; height: 200px; overflow: hidden; transition: background 2s ease; }
+.header.day { background: linear-gradient(180deg, #1a6bb5 0%, #3d9be9 40%, #f9a825 80%, #e65100 100%); }
+.header.night { background: linear-gradient(180deg, #040810 0%, #080c20 40%, #0d1530 80%, #111825 100%); }
+
+.sun { position: absolute; width: 52px; height: 52px; border-radius: 50%; background: #ffd740; box-shadow: 0 0 30px 10px rgba(255,215,64,0.4); top: 20px; right: 40px; transition: all 3s ease; }
+.header.day .sun { opacity: 1; transform: scale(1); }
+.header.night .sun { opacity: 0; transform: scale(0.3) translateY(60px); }
+
+.moon { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: #fffde7; box-shadow: 0 0 20px 6px rgba(255,253,200,0.3); top: 18px; right: 44px; transition: all 3s ease; }
+.header.day .moon { opacity: 0; transform: scale(0.3) translateY(-40px); }
+.header.night .moon { opacity: 1; transform: scale(1); }
+
+.stars-wrap { position: absolute; inset: 0; transition: opacity 2s; }
+.header.day .stars-wrap { opacity: 0; }
+.header.night .stars-wrap { opacity: 1; }
+.star { position: absolute; border-radius: 50%; background: white; animation: tw 2s infinite alternate; }
+@keyframes tw { from{opacity:.1} to{opacity:.9} }
+
+.clouds-wrap { position: absolute; inset: 0; transition: opacity 2s; }
+.header.night .clouds-wrap { opacity: 0.1; }
+.cloud { position: absolute; background: white; border-radius: 30px; opacity: 0.85; animation: cloudDrift linear infinite; }
+@keyframes cloudDrift { from{transform:translateX(0)} to{transform:translateX(-120px)} }
+
+.mountains { position: absolute; bottom: 44px; left: 0; right: 0; }
+.road-scene { position: absolute; bottom: 0; left: 0; right: 0; height: 46px; }
+.road-bg { position: absolute; bottom: 0; left: 0; right: 0; height: 36px; background: #2a2a2a; }
+.road-side { position: absolute; bottom: 35px; left: 0; right: 0; height: 3px; background: #f9a825; }
+.road-marks { position: absolute; bottom: 15px; left: 0; right: 0; height: 4px; background: repeating-linear-gradient(90deg, white 0, white 24px, transparent 24px, transparent 52px); opacity: 0.5; animation: roadScroll 0.7s linear infinite; }
+@keyframes roadScroll { to { transform: translateX(-52px); } }
+
+.van-wrap { position: absolute; bottom: 33px; left: 50%; transform: translateX(-55%); animation: vanBounce 0.35s ease-in-out infinite alternate; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5)); }
+@keyframes vanBounce { from{transform:translateX(-55%) translateY(0)} to{transform:translateX(-55%) translateY(-3px)} }
+
+.beam-wrap { position: absolute; bottom: 46px; left: 50%; transform: translateX(48px); transition: opacity 2s; }
+.header.day .beam-wrap { opacity: 0; }
+.header.night .beam-wrap { opacity: 1; }
+.beam { width: 80px; height: 18px; background: linear-gradient(90deg, rgba(255,240,150,0.7), transparent); border-radius: 0 50% 50% 0; clip-path: polygon(0 40%, 100% 0%, 100% 100%, 0 60%); animation: beamPulse 1.5s ease-in-out infinite alternate; }
+@keyframes beamPulse { from{opacity:0.6} to{opacity:1} }
+
+.exhaust-wrap { position: absolute; bottom: 52px; left: calc(50% - 130px); display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.puff { border-radius: 50%; background: rgba(180,190,210,0.25); animation: puffUp 1.4s ease-out infinite; }
+@keyframes puffUp { 0%{transform:translateY(0) scale(0.5);opacity:0.5} 100%{transform:translateY(-35px) scale(2.5);opacity:0} }
+
+.brand-overlay { position: absolute; top: 12px; left: 14px; z-index: 5; }
+.brand-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border: 0.5px solid rgba(255,255,255,0.15); border-radius: 30px; padding: 5px 12px 5px 5px; }
+.brand-icon { width: 26px; height: 26px; border-radius: 50%; background: #e65100; display:flex; align-items:center; justify-content:center; }
+.brand-icon i { color: white; font-size: 13px; }
+.brand-text { color: white; font-size: 12px; font-weight: 600; }
+.brand-sub { color: rgba(255,255,255,0.5); font-size: 10px; }
+
+.toggle-btn { position: absolute; top: 14px; right: 14px; z-index: 10; background: rgba(0,0,0,0.35); border: 0.5px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 5px 12px; color: white; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.tagline-bar { position: absolute; bottom: 48px; left: 0; right: 0; text-align: center; z-index: 3; pointer-events: none; }
+.tagline-bar span { font-size: 10px; color: rgba(255,255,255,0.55); }
+.tagline-bar strong { color: #ffd740; }
+
+.nav { display:flex; background:#0e1520; border-bottom:0.5px solid rgba(255,255,255,0.06); position:sticky; top:0; z-index:20; }
+.nav-item { flex:1; padding:10px 4px; display:flex; flex-direction:column; align-items:center; gap:3px; border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; }
+.nav-item.active { border-bottom-color:#e65100; }
+.nav-item i { font-size:18px; color:rgba(255,255,255,0.3); }
+.nav-item.active i { color:#e65100; }
+.nav-item span { font-size:9px; color:rgba(255,255,255,0.3); }
+.nav-item.active span { color:#e65100; }
+
+.content { padding:14px; }
+.section { display:none; }
+.section.active { display:block; }
+
+.hero-card { border-radius:16px; padding:18px; margin-bottom:12px; background:linear-gradient(135deg,#1a1a0a,#2a1f08); border:0.5px solid rgba(230,81,0,0.2); position:relative; overflow:hidden; }
+.hero-card::after { content:''; position:absolute; top:-40px; right:-40px; width:130px; height:130px; border-radius:50%; background:rgba(230,81,0,0.1); }
+.hero-card h2 { color:white; font-size:15px; font-weight:600; margin-bottom:4px; position:relative; z-index:1; }
+.hero-card p { color:rgba(255,255,255,0.45); font-size:12px; margin-bottom:14px; position:relative; z-index:1; }
+.hero-btn { background:#e65100; color:white; border:none; padding:10px 18px; border-radius:10px; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; position:relative; z-index:1; }
+
+.stats { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px; }
+.stat-card { background:#0e1520; border:0.5px solid rgba(255,255,255,0.06); border-radius:12px; padding:14px; text-align:center; }
+.stat-num { font-size:22px; font-weight:700; color:#f9a825; }
+.stat-label { font-size:10px; color:rgba(255,255,255,0.35); margin-top:2px; }
+
+.form-card { background:#0e1520; border:0.5px solid rgba(255,255,255,0.06); border-radius:14px; padding:14px; margin-bottom:10px; }
+.form-title { font-size:13px; font-weight:600; color:white; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.form-title i { color:#e65100; font-size:15px; }
+.field { margin-bottom:10px; }
+.field label { font-size:11px; color:rgba(255,255,255,0.35); margin-bottom:4px; display:block; }
+.field input, .field select, .field textarea { width:100%; padding:10px 12px; border:0.5px solid rgba(255,255,255,0.08); border-radius:10px; background:#080c14; color:white; font-size:13px; outline:none; }
+.field textarea { resize:none; height:65px; }
+.field select option { background:#0e1520; }
+
+.tariff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.tariff-item { border:0.5px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px 6px; text-align:center; cursor:pointer; background:#080c14; }
+.tariff-item.selected { border-color:#e65100; background:rgba(230,81,0,0.08); }
+.tariff-item i { font-size:20px; color:rgba(255,255,255,0.25); display:block; margin-bottom:4px; }
+.tariff-item.selected i { color:#e65100; }
+.t-name { font-size:12px; font-weight:600; color:white; }
+.t-kg { font-size:10px; color:rgba(255,255,255,0.35); }
+
+.loc-btn { width:100%; padding:10px; border:0.5px dashed rgba(230,81,0,0.4); border-radius:10px; background:rgba(230,81,0,0.04); color:rgba(255,255,255,0.4); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+.loc-btn i { color:#e65100; font-size:15px; }
+.submit-btn { width:100%; padding:13px; background:#e65100; color:white; border:none; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px; }
+
+.order-card { background:#0e1520; border:0.5px solid rgba(255,255,255,0.06); border-radius:14px; padding:14px; margin-bottom:10px; }
+.order-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.order-id { font-size:13px; font-weight:600; color:white; }
+.badge { font-size:10px; padding:3px 10px; border-radius:20px; }
+.badge.new { background:rgba(55,138,221,0.15); color:#85b7eb; }
+.badge.way { background:rgba(249,168,37,0.15); color:#f9a825; }
+.badge.done { background:rgba(99,153,34,0.15); color:#97c459; }
+.order-route { font-size:12px; color:rgba(255,255,255,0.35); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.order-route i { color:#e65100; font-size:13px; }
+.order-bottom { display:flex; justify-content:space-between; font-size:11px; color:rgba(255,255,255,0.25); }
+.order-price { color:#f9a825; font-weight:600; }
+
+.price-table { background:#0e1520; border:0.5px solid rgba(255,255,255,0.06); border-radius:14px; overflow:hidden; margin-bottom:12px; }
+.price-header { background:#e65100; padding:10px 14px; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:4px; }
+.price-header span { color:white; font-size:11px; font-weight:600; text-align:center; }
+.price-header span:first-child { text-align:left; }
+.price-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:4px; padding:9px 14px; border-top:0.5px solid rgba(255,255,255,0.04); }
+.price-row:nth-child(even) { background:rgba(255,255,255,0.02); }
+.price-row span { font-size:11px; color:rgba(255,255,255,0.35); text-align:center; }
+.price-row span:first-child { color:rgba(255,255,255,0.75); text-align:left; }
+.hl { color:#f9a825 !important; }
+
+.contact-card { background:#0e1520; border:0.5px solid rgba(255,255,255,0.06); border-radius:14px; padding:14px; margin-bottom:12px; }
+.contact-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:0.5px solid rgba(255,255,255,0.04); }
+.contact-row:last-child { border:none; }
+.c-icon { width:36px; height:36px; border-radius:50%; background:rgba(230,81,0,0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.c-icon i { color:#e65100; font-size:17px; }
+.c-label { font-size:10px; color:rgba(255,255,255,0.3); }
+.c-val { font-size:13px; color:white; }
+.sec-title { color:white; font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.sec-title i { color:#e65100; }
+</style>
+</head>
+<body>
+
+<div class="header day" id="header">
+  <div class="stars-wrap" id="starsWrap"></div>
+  <div class="sun"></div>
+  <div class="moon"></div>
+  <div class="clouds-wrap">
+    <div class="cloud" style="width:60px;height:18px;top:35px;left:60px;animation-duration:18s"></div>
+    <div class="cloud" style="width:40px;height:12px;top:28px;left:140px;animation-duration:22s;opacity:0.6"></div>
+  </div>
+  <div class="mountains">
+    <svg width="100%" height="80" viewBox="0 0 380 80" preserveAspectRatio="none">
+      <polygon points="0,80 60,20 120,80" fill="rgba(0,0,0,0.15)"/>
+      <polygon points="80,80 160,10 240,80" fill="rgba(0,0,0,0.2)"/>
+      <polygon points="200,80 280,25 360,80" fill="rgba(0,0,0,0.15)"/>
+    </svg>
+  </div>
+  <div class="road-scene">
+    <div class="road-bg"></div>
+    <div class="road-side"></div>
+    <div class="road-marks"></div>
+  </div>
+  <div class="exhaust-wrap">
+    <div class="puff" style="width:12px;height:12px;animation-delay:0s"></div>
+    <div class="puff" style="width:8px;height:8px;animation-delay:0.5s"></div>
+    <div class="puff" style="width:5px;height:5px;animation-delay:1s"></div>
+  </div>
+  <div class="beam-wrap"><div class="beam"></div></div>
+  <div class="van-wrap">
+    <svg width="200" height="75" viewBox="0 0 200 75" fill="none">
+      <rect x="18" y="2" width="110" height="16" rx="4" fill="#5d4037"/>
+      <rect x="20" y="4" width="106" height="12" rx="3" fill="#6d4c41"/>
+      <line x1="55" y1="4" x2="55" y2="16" stroke="#4e342e" stroke-width="1"/>
+      <line x1="90" y1="4" x2="90" y2="16" stroke="#4e342e" stroke-width="1"/>
+      <line x1="125" y1="4" x2="125" y2="16" stroke="#4e342e" stroke-width="1"/>
+      <rect x="5" y="15" width="140" height="45" rx="6" fill="#f57c00"/>
+      <rect x="5" y="15" width="140" height="20" rx="4" fill="#fb8c00" opacity="0.5"/>
+      <rect x="5" y="42" width="140" height="3" rx="1" fill="#e65100"/>
+      <rect x="5" y="15" width="20" height="45" rx="4" fill="#ef6c00"/>
+      <rect x="145" y="18" width="50" height="42" rx="6" fill="#e65100"/>
+      <rect x="150" y="21" width="32" height="22" rx="4" fill="#4fc3f7" opacity="0.75"/>
+      <rect x="150" y="21" width="32" height="10" rx="3" fill="white" opacity="0.15"/>
+      <line x1="166" y1="21" x2="166" y2="43" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>
+      <rect x="184" y="23" width="9" height="12" rx="2" fill="#4fc3f7" opacity="0.5"/>
+      <rect x="28" y="26" width="105" height="28" rx="3" fill="rgba(0,0,0,0.15)"/>
+      <text x="80" y="38" fill="white" font-size="11" font-weight="bold" text-anchor="middle" font-family="Arial">AKA UKA</text>
+      <text x="80" y="50" fill="#ffd740" font-size="10" font-weight="bold" text-anchor="middle" font-family="Arial">EXPRESS</text>
+      <polygon points="130,40 143,36 143,44" fill="white" opacity="0.8"/>
+      <rect x="190" y="26" width="10" height="7" rx="2" fill="#fff9c4"/>
+      <rect x="191" y="42" width="9" height="10" rx="2" fill="#bf360c"/>
+      <rect x="190" y="52" width="10" height="4" rx="2" fill="#bf360c"/>
+      <circle cx="38" cy="62" r="12" fill="#212121"/><circle cx="38" cy="62" r="8" fill="#37474f"/><circle cx="38" cy="62" r="4" fill="#455a64"/>
+      <circle cx="108" cy="62" r="12" fill="#212121"/><circle cx="108" cy="62" r="8" fill="#37474f"/><circle cx="108" cy="62" r="4" fill="#455a64"/>
+      <circle cx="168" cy="62" r="12" fill="#212121"/><circle cx="168" cy="62" r="8" fill="#37474f"/><circle cx="168" cy="62" r="4" fill="#455a64"/>
+      <rect x="5" y="22" width="6" height="8" rx="2" fill="#e53935" opacity="0.9"/>
+      <line x1="147" y1="18" x2="143" y2="5" stroke="#e65100" stroke-width="1.5"/>
+      <circle cx="143" cy="5" r="2.5" fill="#ffd740"/>
+    </svg>
+  </div>
+  <div class="brand-overlay">
+    <div class="brand-pill">
+      <div class="brand-icon"><i class="ti ti-truck-delivery"></i></div>
+      <div>
+        <div class="brand-text">AKA UKA EXPRESS</div>
+        <div class="brand-sub">Yetkazib berish xizmati</div>
+      </div>
+    </div>
+  </div>
+  <button class="toggle-btn" id="toggleBtn" onclick="toggleDayNight()">
+    <i class="ti ti-moon" id="toggleIcon"></i>
+    <span id="toggleText">Tun</span>
+  </button>
+  <div class="tagline-bar">
+    <span>O'zbekiston bo'ylab <strong>tez va ishonchli</strong></span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-item active" onclick="show('home',this)"><i class="ti ti-home"></i><span>Bosh</span></button>
+  <button class="nav-item" onclick="show('order',this)"><i class="ti ti-package"></i><span>Buyurtma</span></button>
+  <button class="nav-item" onclick="show('orders',this)"><i class="ti ti-list"></i><span>Mening</span></button>
+  <button class="nav-item" onclick="show('prices',this)"><i class="ti ti-currency-dollar"></i><span>Narxlar</span></button>
+  <button class="nav-item" onclick="show('contact',this)"><i class="ti ti-phone"></i><span>Aloqa</span></button>
+</div>
+
+<div class="content">
+  <div class="section active" id="home">
+    <div class="hero-card">
+      <h2>Yukingizni ishonch bilan yetkazamiz</h2>
+      <p>14 viloyat, 150+ tuman — hammasi bir botda</p>
+      <button class="hero-btn" onclick="show('order', document.querySelectorAll('.nav-item')[1])">
+        <i class="ti ti-package"></i> Buyurtma berish
+      </button>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">Viloyat</div></div>
+      <div class="stat-card"><div class="stat-num">150+</div><div class="stat-label">Tuman</div></div>
+      <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Tarif turi</div></div>
+      <div class="stat-card"><div class="stat-num">24/7</div><div class="stat-label">Xizmat</div></div>
+    </div>
+  </div>
+
+  <div class="section" id="order">
+    <div class="form-card">
+      <div class="form-title"><i class="ti ti-user"></i>Shaxsiy ma'lumotlar</div>
+      <div class="field"><label>Ism familiya</label><input type="text" id="fullname" placeholder="Karimov Jasur"></div>
+      <div class="field"><label>Telefon raqam</label><input type="tel" id="phone" placeholder="+998 90 123 45 67"></div>
+    </div>
+    <div class="form-card">
+      <div class="form-title"><i class="ti ti-package"></i>Tarif tanlang</div>
+      <div class="tariff-grid">
+        <div class="tariff-item selected" onclick="selectTariff(this,'SMALL')"><i class="ti ti-square-rounded"></i><div class="t-name">SMALL</div><div class="t-kg">0-5 kg</div></div>
+        <div class="tariff-item" onclick="selectTariff(this,'MEDIUM')"><i class="ti ti-square-rounded-plus"></i><div class="t-name">MEDIUM</div><div class="t-kg">5-20 kg</div></div>
+        <div class="tariff-item" onclick="selectTariff(this,'LARGE')"><i class="ti ti-box"></i><div class="t-name">LARGE</div><div class="t-kg">20 kg+</div></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-title"><i class="ti ti-map-pin"></i>Yuk olinadigan joy</div>
+      <div class="field"><label>Viloyat</label>
+        <select id="fromRegion" onchange="updateDistricts('fromRegion','fromDistrict')">
+          <option value="">Tanlang...</option>
+        </select>
+      </div>
+      <div class="field"><label>Tuman/Shahar</label>
+        <select id="fromDistrict"><option value="">Avval viloyat tanlang</option></select>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-title"><i class="ti ti-flag"></i>Yuk yetkaziladigan joy</div>
+      <div class="field"><label>Viloyat</label>
+        <select id="toRegion" onchange="updateDistricts('toRegion','toDistrict')">
+          <option value="">Tanlang...</option>
+        </select>
+      </div>
+      <div class="field"><label>Tuman/Shahar</label>
+        <select id="toDistrict"><option value="">Avval viloyat tanlang</option></select>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-title"><i class="ti ti-notes"></i>Yuk tavsifi</div>
+      <div class="field"><textarea id="cargo" placeholder="Yuk haqida ma'lumot yozing..."></textarea></div>
+    </div>
+    <button class="submit-btn" onclick="submitOrder()"><i class="ti ti-send"></i>Buyurtma berish</button>
+  </div>
+
+  <div class="section" id="orders">
+    <div class="sec-title"><i class="ti ti-list"></i>Mening buyurtmalarim</div>
+    <div class="order-card">
+      <div class="order-top"><span class="order-id">AU-1042</span><span class="badge way">Yo'lda</span></div>
+      <div class="order-route"><i class="ti ti-map-pin"></i>Samarqand → Toshkent</div>
+      <div class="order-bottom"><span>MEDIUM · 12.06.2026</span><span class="order-price">Belgilanmagan</span></div>
+    </div>
+    <div class="order-card">
+      <div class="order-top"><span class="order-id">AU-1038</span><span class="badge done">Yetkazildi</span></div>
+      <div class="order-route"><i class="ti ti-map-pin"></i>Samarqand → Buxoro</div>
+      <div class="order-bottom"><span>SMALL · 10.06.2026</span><span class="order-price">60 000 so'm</span></div>
+    </div>
+  </div>
+
+  <div class="section" id="prices">
+    <div class="sec-title"><i class="ti ti-currency-dollar"></i>Narxlar jadvali</div>
+    <div class="price-table">
+      <div class="price-header"><span>Yo'nalish</span><span>SMALL</span><span>MEDIUM</span><span>LARGE</span></div>
+      <div class="price-row"><span>→ Jizzax</span><span>40 000</span><span>70 000</span><span class="hl">90 000</span></div>
+      <div class="price-row"><span>→ Sirdaryo</span><span>40 000</span><span>50 000</span><span class="hl">80 000</span></div>
+      <div class="price-row"><span>→ Toshkent</span><span>60 000</span><span>90 000</span><span class="hl">120 000</span></div>
+      <div class="price-row"><span>→ Navoiy</span><span>60 000</span><span>100 000</span><span class="hl">140 000</span></div>
+      <div class="price-row"><span>→ Buxoro</span><span>60 000</span><span>100 000</span><span class="hl">140 000</span></div>
+      <div class="price-row"><span>→ Andijon</span><span>50 000</span><span>80 000</span><span class="hl">130 000</span></div>
+      <div class="price-row"><span>→ Namangan</span><span>50 000</span><span>80 000</span><span class="hl">130 000</span></div>
+      <div class="price-row"><span>→ Farg'ona</span><span>50 000</span><span>80 000</span><span class="hl">130 000</span></div>
+      <div class="price-row"><span>→ Qashqadaryo</span><span>60 000</span><span>90 000</span><span class="hl">130 000</span></div>
+      <div class="price-row"><span>→ Surxondaryo</span><span>80 000</span><span>140 000</span><span class="hl">180 000</span></div>
+      <div class="price-row"><span>→ Xorazm</span><span>90 000</span><span>140 000</span><span class="hl">180 000</span></div>
+      <div class="price-row"><span>→ QQR</span><span>90 000</span><span>140 000</span><span class="hl">180 000</span></div>
+    </div>
+    <p style="font-size:11px;color:rgba(255,255,255,0.25);text-align:center;">Narxlar so'mda · @Akaukaexpress</p>
+  </div>
+
+  <div class="section" id="contact">
+    <div class="sec-title"><i class="ti ti-headset"></i>Biz bilan bog'laning</div>
+    <div class="contact-card">
+      <div class="contact-row"><div class="c-icon"><i class="ti ti-brand-telegram"></i></div><div><div class="c-label">Menejer</div><div class="c-val">@Akaukaexpress</div></div></div>
+      <div class="contact-row"><div class="c-icon"><i class="ti ti-phone"></i></div><div><div class="c-label">Telefon 1</div><div class="c-val">+998 77 500 05 14</div></div></div>
+      <div class="contact-row"><div class="c-icon"><i class="ti ti-phone"></i></div><div><div class="c-label">Telefon 2</div><div class="c-val">+998 91 700 19 12</div></div></div>
+      <div class="contact-row"><div class="c-icon"><i class="ti ti-map-pin"></i></div><div><div class="c-label">Manzil</div><div class="c-val">Samarqand, Sattepo, Gumbaz, 159-uy</div></div></div>
+      <div class="contact-row"><div class="c-icon"><i class="ti ti-clock"></i></div><div><div class="c-label">Ish vaqti</div><div class="c-val">08:00 — 20:00</div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGIONS = {
+  "Toshkent shahar": ["Bektemir","Chilonzor","Mirzo Ulug'bek","Olmazar","Sergeli","Shayxontohur","Uchtepa","Yakkasaroy","Yunusobod"],
+  "Toshkent vil.": ["Angren","Bekabad","Bo'ka","Chinoz","Chirchiq","Zangiota","Kibray","Ohangaron","Oqqo'rg'on","Parkent","Yangiyo'l"],
+  "Samarqand": ["Samarqand sh.","Bulungur","Jomboy","Ishtixon","Kattaqo'rg'on","Narpay","Payariq","Pastdarg'om","Urgut","Toyloq"],
+  "Buxoro": ["Buxoro sh.","G'ijduvon","Jondor","Kogon","Qorakol","Romitan","Shofirkon","Vobkent"],
+  "Andijon": ["Andijon sh.","Asaka","Baliqchi","Jalaquduq","Xo'jaobod","Marhamat","Oltinko'l","Shahrixon"],
+  "Farg'ona": ["Farg'ona sh.","Beshariq","Dang'ara","Qo'qon","Marg'ilon","Quva","Rishton","Uchko'prik"],
+  "Namangan": ["Namangan sh.","Chortoq","Chust","Kosonsoy","Pop","To'raqo'rg'on"],
+  "Xorazm": ["Urganch sh.","Bog'ot","Gurlan","Xiva","Xonqa","Shovot","Yangiariq"],
+  "Navoiy": ["Navoiy sh.","Karmana","Navbahor","Nurota","Qiziltepa","Uchquduq"],
+  "Qashqadaryo": ["Qarshi sh.","Chiroqchi","G'uzor","Kasbi","Kitob","Koson","Shahrisabz"],
+  "Surxondaryo": ["Termiz sh.","Boysun","Denov","Jarqo'rg'on","Sherobod","Uzun"],
+  "Jizzax": ["Jizzax sh.","Arnasoy","G'allaorol","Paxtakor","Zomin"],
+  "Sirdaryo": ["Guliston sh.","Boyovut","Sardoba","Xovos","Yangiyer"],
+  "Qoraqalpog'iston": ["Nukus sh.","Beruniy","Chimboy","Qo'ng'irot","To'rtko'l"],
+};
+
+let selectedTariff = 'SMALL';
+
+window.onload = function() {
+  const sw = document.getElementById('starsWrap');
+  for (let i = 0; i < 55; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.5 + 0.8;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*80}%;animation-delay:${Math.random()*3}s;animation-duration:${1.2+Math.random()*2}s`;
+    sw.appendChild(s);
+  }
+  ['fromRegion','toRegion'].forEach(id => {
+    const sel = document.getElementById(id);
+    Object.keys(REGIONS).forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      sel.appendChild(opt);
+    });
+  });
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+  }
+};
+
+function updateDistricts(regionId, districtId) {
+  const region = document.getElementById(regionId).value;
+  const distSel = document.getElementById(districtId);
+  distSel.innerHTML = '<option value="">Tanlang...</option>';
+  if (region && REGIONS[region]) {
+    REGIONS[region].forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      distSel.appendChild(opt);
+    });
+  }
+}
+
+function selectTariff(el, tariff) {
+  document.querySelectorAll('.tariff-item').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTariff = tariff;
+}
+
+function submitOrder() {
+  const fullname = document.getElementById('fullname').value;
+  const phone = document.getElementById('phone').value;
+  const fromRegion = document.getElementById('fromRegion').value;
+  const fromDistrict = document.getElementById('fromDistrict').value;
+  const toRegion = document.getElementById('toRegion').value;
+  const toDistrict = document.getElementById('toDistrict').value;
+  const cargo = document.getElementById('cargo').value;
+
+  if (!fullname || !phone || !fromRegion || !toRegion || !cargo) {
+    alert("Iltimos barcha maydonlarni to'ldiring!");
+    return;
+  }
+  const data = {
+    fullname, phone, tariff: selectedTariff,
+    from: fromRegion + (fromDistrict ? ', ' + fromDistrict : ''),
+    to: toRegion + (toDistrict ? ', ' + toDistrict : ''),
+    cargo
+  };
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.sendData(JSON.stringify(data));
+  } else {
+    alert('Buyurtma yuborildi!\n' + JSON.stringify(data, null, 2));
+  }
+}
+
+let isDay = true;
+function toggleDayNight() {
+  isDay = !isDay;
+  const h = document.getElementById('header');
+  const icon = document.getElementById('toggleIcon');
+  const text = document.getElementById('toggleText');
+  if (isDay) { h.className='header day'; icon.className='ti ti-moon'; text.textContent='Tun'; }
+  else { h.className='header night'; icon.className='ti ti-sun'; text.textContent='Kun'; }
+}
+
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
